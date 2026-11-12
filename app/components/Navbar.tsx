@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect } from "react";
 
 export default function Navbar() {
@@ -22,14 +23,17 @@ export default function Navbar() {
     return (
         <nav className={`navbar ${scrolled ? "scrolled" : ""}`} aria-label="Main navigation">
             <a className="navbar-logo" href="#" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-                <div className="navbar-logo-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                        <path d="M2 17l10 5 10-5" />
-                        <path d="M2 12l10 5 10-5" />
-                    </svg>
-                </div>
-                <span className="navbar-logo-text">DETECTAI</span>
+                <span className="navbar-logo-image-wrap">
+                    <Image
+                        className="navbar-logo-image"
+                        src="/logo.jpg"
+                        alt=""
+                        width={48}
+                        height={48}
+                        priority
+                    />
+                </span>
+                <span className="navbar-logo-text">VERIFAI</span>
             </a>
 
             <ul id="main-navigation" className={`navbar-nav ${menuOpen ? "mobile-open" : ""}`}>

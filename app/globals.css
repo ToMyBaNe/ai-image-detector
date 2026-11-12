@@ -224,19 +224,27 @@ body::before {
   text-decoration: none;
   cursor: pointer;
 }
-.navbar-logo-icon {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, #F06F86, #D93658);
+.navbar-logo-image-wrap {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
   border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  flex: 0 0 auto;
+  isolation: isolate;
 }
-.navbar-logo-icon svg {
-  width: 20px;
-  height: 20px;
-  color: white;
+.navbar-logo-image-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(236, 72, 153, 0.2);
+  pointer-events: none;
+}
+.navbar-logo-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .navbar-logo-text {
   font-family: var(--font-heading);
