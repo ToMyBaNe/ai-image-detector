@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -13,12 +14,13 @@ export default function Navbar() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    const scrollTo = (id: string) => {
+    const navigateTo = (id: string) => {
+        setMenuOpen(false);
         document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     };
 
     return (
-        <nav className={`navbar ${scrolled ? "scrolled" : ""}`}>
+        <nav className={`navbar ${scrolled ? "scrolled" : ""}`} aria-label="Main navigation">
             <a className="navbar-logo" href="#" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
                 <div className="navbar-logo-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -30,20 +32,26 @@ export default function Navbar() {
                 <span className="navbar-logo-text">DETECTAI</span>
             </a>
 
-            <ul className="navbar-nav">
-                <li><a onClick={() => scrollTo("detector")} role="button" tabIndex={0}>Detect</a></li>
-                <li><a onClick={() => scrollTo("features")} role="button" tabIndex={0}>Features</a></li>
-                <li><a onClick={() => scrollTo("how-it-works")} role="button" tabIndex={0}>How It Works</a></li>
+            <ul id="main-navigation" className={`navbar-nav ${menuOpen ? "mobile-open" : ""}`}>
+                <li><a href="#detector" onClick={(event) => { event.preventDefault(); navigateTo("detector"); }}>Detect</a></li>
+                <li><a href="#features" onClick={(event) => { event.preventDefault(); navigateTo("features"); }}>Features</a></li>
+                <li><a href="#how-it-works" onClick={(event) => { event.preventDefault(); navigateTo("how-it-works"); }}>How It Works</a></li>
             </ul>
 
             <button
                 className="navbar-cta"
-                onClick={() => scrollTo("detector")}
+                onClick={() => navigateTo("detector")}
             >
                 Try Now
             </button>
 
-            <button className="navbar-menu-btn" aria-label="Menu">
+            <button
+                className="navbar-menu-btn"
+                aria-label={menuOpen ? "Close menu" : "Open menu"}
+                aria-expanded={menuOpen}
+                aria-controls="main-navigation"
+                onClick={() => setMenuOpen((isOpen) => !isOpen)}
+            >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <line x1="3" y1="6" x2="21" y2="6" />
                     <line x1="3" y1="12" x2="21" y2="12" />
