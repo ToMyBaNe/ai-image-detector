@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+
 interface ModelResult {
     model: string;
     modelId: string;
@@ -41,12 +43,32 @@ export default function ResultsDisplay({
     result,
     onAnalyzeAnother,
 }: ResultsDisplayProps) {
+    const [isPopupOpen, setIsPopupOpen] = useState(true);
+    const popupCloseButtonRef = useRef<HTMLButtonElement>(null);
     const circumference = 2 * Math.PI * 45;
     const offset = circumference - (result.confidence / 100) * circumference;
+
+    useEffect(() => {
+        if (!isPopupOpen) return;
+
+        popupCloseButtonRef.current?.focus();
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") setIsPopupOpen(false);
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isPopupOpen]);
 
     const verdictLabels: Record<string, string> = {
         ai: "AI GENERATED",
         human: "LIKELY REAL",
+        uncertain: "UNCERTAIN",
+    };
+
+    const popupVerdictLabels: Record<string, string> = {
+        ai: "AI GENERATED",
+        human: "NOT AI GENERATED",
         uncertain: "UNCERTAIN",
     };
 
@@ -64,6 +86,41 @@ export default function ResultsDisplay({
 
     return (
         <div className="results-container">
+            {isPopupOpen && (
+                <div className="verdict-popup-backdrop">
+                    <section
+                        className={`verdict-popup ${result.verdict}`}
+                        role="alertdialog"
+                        aria-modal="true"
+                        aria-labelledby="verdict-popup-title"
+                        aria-describedby="verdict-popup-description"
+                        onKeyDown={(event) => {
+                            if (event.key === "Tab") {
+                                event.preventDefault();
+                                popupCloseButtonRef.current?.focus();
+                            }
+                        }}
+                    >
+                        <div className="verdict-popup-icon" aria-hidden="true">
+                            {result.verdict === "ai" ? "!" : result.verdict === "human" ? "✓" : "?"}
+                        </div>
+                        <h2 id="verdict-popup-title">{popupVerdictLabels[result.verdict]}</h2>
+                        <p id="verdict-popup-description">
+                            {result.verdict === "uncertain"
+                                ? "The analysis is inconclusive. The models did not agree enough to determine whether this image is AI-generated."
+                                : `${verdictDescriptions[result.verdict]} Confidence: ${result.confidence.toFixed(1)}%.`}
+                        </p>
+                        <button
+                            ref={popupCloseButtonRef}
+                            className="btn btn-primary"
+                            onClick={() => setIsPopupOpen(false)}
+                        >
+                            View Full Results
+                        </button>
+                    </section>
+                </div>
+            )}
+
             <div className="results-card">
                 {/* Header */}
                 <div className="results-header">
