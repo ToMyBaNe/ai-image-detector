@@ -54,12 +54,23 @@ async function querySightengine(
     imageBlob: Blob
 ): Promise<{
     genai: { aiScore: number; humanScore: number } | null;
-} | null> {
+    error?: string;
+}> {
     const apiUser = process.env.SIGHTENGINE_API_USER;
     const apiSecret = process.env.SIGHTENGINE_API_SECRET;
 
-    if (!apiUser || !apiSecret) return null;
+    if (!apiUser || !apiSecret) {
+        const missingVariables = [
+            !apiUser && "SIGHTENGINE_API_USER",
+            !apiSecret && "SIGHTENGINE_API_SECRET",
+        ].filter(Boolean);
+        const error = `Missing Vercel environment variable(s): ${missingVariables.join(", ")}`;
+        console.error(`Sightengine disabled: ${error}`);
+        return { genai: null, error };
+    }
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
     try {
         const formData = new FormData();
         formData.append("media", imageBlob, "image.jpg");
@@ -67,34 +78,49 @@ async function querySightengine(
         formData.append("api_user", apiUser);
         formData.append("api_secret", apiSecret);
 
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 20000);
-
         const response = await fetch("https://api.sightengine.com/1.0/check.json", {
             method: "POST",
             body: formData,
             signal: controller.signal,
         });
 
-        clearTimeout(timeout);
-        if (!response.ok) return null;
+        if (!response.ok) {
+            console.error(`Sightengine request failed with HTTP ${response.status}`);
+            return { genai: null, error: `Sightengine returned HTTP ${response.status}` };
+        }
 
         const data = await response.json();
-        if (data.status !== "success") return null;
+        if (data.status !== "success") {
+            console.error("Sightengine rejected the request", {
+                status: data.status,
+                errorCode: data.error?.code,
+            });
+            return {
+                genai: null,
+                error: "Sightengine rejected the request. Check the credentials and API quota in Vercel logs.",
+            };
+        }
 
         const genaiVal = data.type?.ai_generated;
+        if (typeof genaiVal !== "number" || !Number.isFinite(genaiVal)) {
+            console.error("Sightengine response did not include a valid type.ai_generated score");
+            return { genai: null, error: "Sightengine did not return an AI-generated score" };
+        }
 
         return {
-            genai:
-                genaiVal !== undefined
-                    ? {
-                        aiScore: Math.round(genaiVal * 10000) / 100,
-                        humanScore: Math.round((1 - genaiVal) * 10000) / 100,
-                    }
-                    : null,
+            genai: {
+                aiScore: Math.round(genaiVal * 10000) / 100,
+                humanScore: Math.round((1 - genaiVal) * 10000) / 100,
+            },
         };
-    } catch {
-        return null;
+    } catch (error) {
+        console.error("Sightengine request error:", error);
+        return {
+            genai: null,
+            error: "Sightengine request failed. Check Vercel function logs for details.",
+        };
+    } finally {
+        clearTimeout(timeout);
     }
 }
 
@@ -257,7 +283,7 @@ export async function POST(request: NextRequest) {
         const modelResults: ModelResultEntry[] = [];
 
         // 1. Sightengine GenAI
-        if (sightengineResult?.genai) {
+        if (sightengineResult.genai) {
             modelResults.push({
                 model: "Sightengine GenAI",
                 modelId: "sightengine/genai",
@@ -266,6 +292,17 @@ export async function POST(request: NextRequest) {
                 aiScore: sightengineResult.genai.aiScore,
                 humanScore: sightengineResult.genai.humanScore,
                 verdict: sightengineResult.genai.aiScore > 50 ? "ai" : "human",
+            });
+        } else {
+            modelResults.push({
+                model: "Sightengine GenAI",
+                modelId: "sightengine/genai",
+                architecture: "Commercial AI Generator Detector",
+                weight: 0,
+                aiScore: 0,
+                humanScore: 0,
+                verdict: "error",
+                error: sightengineResult.error || "Sightengine did not return a result",
             });
         }
 

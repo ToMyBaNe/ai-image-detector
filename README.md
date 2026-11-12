@@ -62,8 +62,8 @@ The easiest way to deploy is via **Vercel**.
 
 1.  Push your code to GitHub.
 2.  Import the project in Vercel.
-3.  Add the Environment Variables (`SIGHTENGINE_API_USER`, `SIGHTENGINE_API_SECRET`) in the Vercel project settings. The public Hugging Face detector does not require a token.
-4.  Deploy!
+3.  In **Project Settings → Environment Variables**, add `SIGHTENGINE_API_USER` and `SIGHTENGINE_API_SECRET` using the values from your Sightengine account. Select the environments you use (Production and, if needed, Preview). Vercel does not read your local `.env.local` file.
+4.  Redeploy after saving the variables; changes only apply to new deployments. The public Hugging Face detector does not require a token.
 
 ## 🧩 Architecture
 

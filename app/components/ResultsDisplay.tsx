@@ -200,34 +200,37 @@ export default function ResultsDisplay({
                     {result.models.map((model, index) => (
                         <div className="model-result" key={index}>
                             {model.error ? (
-                                <div className="model-result-header">
-                                    <div>
-                                        <span className="model-result-name">{model.model}</span>
-                                        {model.architecture && (
-                                            <span
-                                                style={{
-                                                    display: "block",
-                                                    fontFamily: "var(--font-mono)",
-                                                    fontSize: "0.65rem",
-                                                    color: "var(--text-muted)",
-                                                    marginTop: "2px",
-                                                }}
-                                            >
-                                                {model.architecture}
-                                            </span>
-                                        )}
+                                <>
+                                    <div className="model-result-header">
+                                        <div>
+                                            <span className="model-result-name">{model.model}</span>
+                                            {model.architecture && (
+                                                <span
+                                                    style={{
+                                                        display: "block",
+                                                        fontFamily: "var(--font-mono)",
+                                                        fontSize: "0.65rem",
+                                                        color: "var(--text-muted)",
+                                                        marginTop: "2px",
+                                                    }}
+                                                >
+                                                    {model.architecture}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <span
+                                            className="model-result-badge"
+                                            style={{
+                                                background: "rgba(100,100,100,0.1)",
+                                                color: "var(--text-muted)",
+                                                border: "1px solid rgba(100,100,100,0.2)",
+                                            }}
+                                        >
+                                            Unavailable
+                                        </span>
                                     </div>
-                                    <span
-                                        className="model-result-badge"
-                                        style={{
-                                            background: "rgba(100,100,100,0.1)",
-                                            color: "var(--text-muted)",
-                                            border: "1px solid rgba(100,100,100,0.2)",
-                                        }}
-                                    >
-                                        Unavailable
-                                    </span>
-                                </div>
+                                    <p className="model-result-error">{model.error}</p>
+                                </>
                             ) : (
                                 <>
                                     <div className="model-result-header">

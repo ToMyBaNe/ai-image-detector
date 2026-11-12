@@ -1036,6 +1036,11 @@ body::before {
   justify-content: space-between;
   margin-bottom: 12px;
 }
+.model-result-error {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
 .model-result-name {
   font-family: var(--font-mono);
   font-size: 0.8rem;
