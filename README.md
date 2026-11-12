@@ -9,13 +9,13 @@
 
 ## 🚀 Features
 
--   **Multi-Engine Ensemble**: Uses 3 independent detection engines for maximum reliability.
+-   **Multi-Engine Ensemble**: Combines available detector scores with local image metadata signals.
     -   **Sightengine GenAI**: Commercial-grade detection for DALL-E, Midjourney, Stable Diffusion.
-    -   **Ateeqq Space (ViT)**: High-accuracy Vision Transformer hosted on Hugging Face Spaces.
+    -   **Free Hugging Face Detector**: [A public community model](https://huggingface.co/spaces/ymcmy/AI_Generated_Image_Detector), included as an experimental low-weight signal. Its shared runtime can be unavailable and it can misclassify images.
     -   **Local Metadata Engine**: specialized heuristic analysis of EXIF data, AI tool markers, and entropy.
--   **Weighted Voting System**: Smart aggregation logic that reduces false positives by cross-validating results.
--   **Cyberpunk UI**: A stunning, responsive interface with neon aesthetics, glassmorphism, and smooth animations.
--   **Privacy-First**: Images are processed in real-time and never stored.
+-   **Weighted Voting System**: Combines signals; results are estimates and can be wrong.
+-   **Responsive UI**: Watermelon-pink and white design with smooth animations.
+-   **Image handling**: Uploads are sent to enabled analysis providers, including Sightengine and Hugging Face. This app does not intentionally persist uploaded images; each provider's data policy applies.
 -   **Drag & Drop**: Intuitive upload zone with file validation and preview.
 
 ## 🛠️ Tech Stack
@@ -48,8 +48,6 @@
     SIGHTENGINE_API_USER=your_user_id
     SIGHTENGINE_API_SECRET=your_api_secret
 
-    # Hugging Face Token (Optional, for higher rate limits)
-    HF_API_TOKEN=hf_your_token_here
     ```
 
 4.  **Run Development Server**:
@@ -64,7 +62,7 @@ The easiest way to deploy is via **Vercel**.
 
 1.  Push your code to GitHub.
 2.  Import the project in Vercel.
-3.  Add the Environment Variables (`SIGHTENGINE_API_USER`, `SIGHTENGINE_API_SECRET`, `HF_API_TOKEN`) in the Vercel project settings.
+3.  Add the Environment Variables (`SIGHTENGINE_API_USER`, `SIGHTENGINE_API_SECRET`) in the Vercel project settings. The public Hugging Face detector does not require a token.
 4.  Deploy!
 
 ## 🧩 Architecture
@@ -73,7 +71,7 @@ The easiest way to deploy is via **Vercel**.
 graph TD
     A[Image Upload] --> B[Next.js API Route /api/detect]
     B --> C1[Sightengine GenAI]
-    B --> C2["Ateeqq Space (ViT/CNN)"]
+    B --> C2["Free Hugging Face detector (experimental)"]
     B --> C3[Local Metadata Analysis]
     C1 & C2 & C3 --> D[Ensemble Engine]
     D --> E[Weighted Voting Logic]

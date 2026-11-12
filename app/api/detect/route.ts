@@ -7,69 +7,43 @@ import { client } from "@gradio/client";
    Detection engines:
    1. Sightengine GenAI        — Commercial AI generation detector
    2. Sightengine Deepfake     — Deepfake face manipulation detector
-   3. Ateeqq/ai-image-detector — Hugging Face Space (ViT/CNN via Gradio)
+   3. ymcmy/AI_Generated_Image_Detector — Free public Hugging Face Space
    4. Local Metadata Engine    — Privacy-first metadata & entropy analysis
    ========================================================================== */
 
-// ─── Ateeqq Space (Gradio) ───────────────────────────────────────────────
+// ─── Free Hugging Face detector (experimental) ────────────────────────────
 
-async function queryAteeqqSpace(
+async function queryFreeHuggingFaceDetector(
     imageBlob: Blob
 ): Promise<{
     aiScore: number;
     humanScore: number;
-    label: string;
-    confidences?: Record<string, number>
 } | null> {
     try {
-        const app = await client("Ateeqq/ai-image-detector", {
-            hf_token: process.env.HF_API_TOKEN as `hf_${string}`
-        } as any);
+        const app = await client("ymcmy/AI_Generated_Image_Detector");
+        const result = await app.predict("/predict", [imageBlob]);
+        if (!Array.isArray(result.data) || result.data.length === 0) {
+            throw new Error("Hugging Face detector returned no result");
+        }
+        const output: unknown = result.data[0];
 
-        const result = await app.predict("/predict", [
-            imageBlob,
-        ]);
+        if (typeof output !== "string") {
+            throw new Error("Unexpected response from the Hugging Face detector");
+        }
 
-        // Result format: data[0] is label object {"Real": 0.9, "Fake": 0.1}
-        const data = result.data as any[];
-        const predictions = data[0]; // {"Real": 0.99, "Fake": 0.01} or similar
-
-        let aiScore = 0;
-        let humanScore = 0;
-
-        if (predictions && typeof predictions === 'object') {
-            const label = predictions.label;
-            const confidences = predictions.confidences;
-
-            if (Array.isArray(confidences)) {
-                const aiConf = confidences.find((c: any) => c.label.toLowerCase().includes('ai'))?.confidence || 0;
-                const humanConf = confidences.find((c: any) => c.label.toLowerCase().includes('hum'))?.confidence || 0;
-
-                aiScore = aiConf;
-                humanScore = humanConf;
-            } else if (label) {
-                // Fallback if structured confidence not available
-                if (label.toLowerCase().includes('ai')) aiScore = 0.99;
-                else humanScore = 0.99;
-            }
-
-            // Normalize if they don't sum to 1
-            const total = aiScore + humanScore;
-            if (total > 0) {
-                aiScore = aiScore / total;
-                humanScore = humanScore / total;
-            }
+        const scoreMatch = output.match(/(\d+(?:\.\d+)?)\s*%/);
+        const aiScore = scoreMatch ? Number(scoreMatch[1]) : Number.NaN;
+        if (!Number.isFinite(aiScore) || aiScore < 0 || aiScore > 100) {
+            throw new Error("Hugging Face detector returned an invalid AI score");
         }
 
         return {
-            aiScore: Math.round(aiScore * 10000) / 100,
-            humanScore: Math.round(humanScore * 10000) / 100,
-            label: aiScore > humanScore ? "Fake" : "Real",
-            confidences: predictions
+            aiScore: Math.round(aiScore * 100) / 100,
+            humanScore: Math.round((100 - aiScore) * 100) / 100,
         };
 
     } catch (error) {
-        console.error("Ateeqq Space Error:", error);
+        console.error("Free Hugging Face detector error:", error);
         return null;
     }
 }
@@ -271,9 +245,9 @@ export async function POST(request: NextRequest) {
         const startTime = Date.now();
 
         // ─── Run all engines in parallel ──────────────────────────
-        const [sightengineResult, ateeqqResult, metadataResult] = await Promise.all([
+        const [sightengineResult, freeHuggingFaceResult, metadataResult] = await Promise.all([
             querySightengine(imageBlob),
-            queryAteeqqSpace(imageBlob),
+            queryFreeHuggingFaceDetector(imageBlob),
             analyzeImageMetadata(imageBlob),
         ]);
 
@@ -297,29 +271,28 @@ export async function POST(request: NextRequest) {
 
         // 2. Sightengine Deepfake - REMOVED per user request
 
-        // 3. Ateeqq Space (New!)
-        if (ateeqqResult) {
+        // 3. Free public Hugging Face detector (experimental)
+        if (freeHuggingFaceResult) {
             modelResults.push({
-                model: "Ateeqq AI Detector",
-                modelId: "ateeqq/ai-vs-human",
-                architecture: "Hugging Face Space (ViT/CNN)",
-                weight: 0.9,
-                aiScore: ateeqqResult.aiScore,
-                humanScore: ateeqqResult.humanScore,
-                verdict: ateeqqResult.aiScore > ateeqqResult.humanScore ? "ai" : "human",
+                model: "Free Hugging Face Detector",
+                modelId: "ymcmy/AI_Generated_Image_Detector",
+                architecture: "Public model (experimental)",
+                weight: 0.35,
+                aiScore: freeHuggingFaceResult.aiScore,
+                humanScore: freeHuggingFaceResult.humanScore,
+                verdict: freeHuggingFaceResult.aiScore > freeHuggingFaceResult.humanScore ? "ai" : "human",
             });
         } else {
-            // Log failure but don't crash
-            console.warn("Ateeqq Space failed or returned null");
+            console.warn("Free Hugging Face detector is unavailable");
             modelResults.push({
-                model: "Ateeqq AI Detector",
-                modelId: "ateeqq/ai-vs-human",
-                architecture: "Hugging Face Space",
+                model: "Free Hugging Face Detector",
+                modelId: "ymcmy/AI_Generated_Image_Detector",
+                architecture: "Public model (experimental)",
                 weight: 0,
                 aiScore: 0,
                 humanScore: 0,
                 verdict: "error",
-                error: "Engine unavailable (timeout or connection error)",
+                error: "The free Hugging Face detector is unavailable",
             });
         }
 

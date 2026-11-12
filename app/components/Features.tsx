@@ -35,9 +35,9 @@ export default function Features() {
             ),
         },
         {
-            title: "Privacy First",
+            title: "Transparent Processing",
             description:
-                "Images are processed in real-time and never stored on our servers. Your data stays private.",
+                "Images are sent to enabled analysis providers, including Hugging Face. This app does not intentionally store uploads; provider data policies apply.",
             icon: (
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
