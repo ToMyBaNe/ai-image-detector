@@ -76,7 +76,7 @@ export default function Features() {
         <section className="features-section" id="features">
             <p className="section-label">Capabilities</p>
             <h2 className="section-title">
-                Why Choose <span className="hero-title-gradient">DetectAI</span>
+                Why Choose <span className="hero-title-gradient">VerifAI</span>
             </h2>
             <p className="section-desc">
                 Powered by cutting-edge machine learning models and designed for accuracy, speed, and ease of use.
