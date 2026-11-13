@@ -14,7 +14,7 @@ export default function Footer() {
                 </a>
             </div>
             <p className="footer-copy">
-                &copy; {new Date().getFullYear()} DetectAI. Built for educational purposes.
+                &copy; {new Date().getFullYear()} VerifAI. Built for educational purposes.
             </p>
         </footer>
     );
