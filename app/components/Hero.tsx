@@ -49,8 +49,8 @@ export default function Hero({ onCtaClick }: { onCtaClick: () => void }) {
                     <div className="hero-visual-card">
                         <div className="hero-visual-header">
                             <span className="hero-visual-brand">
-                                <span className="hero-visual-brand-icon">D</span>
-                                DETECTAI <span>/</span> ANALYSIS
+                                <span className="hero-visual-brand-icon">V</span>
+                                VERIFAI <span>/</span> ANALYSIS
                             </span>
                             <span className="hero-visual-status">
                                 <span /> READY
